@@ -1,4 +1,6 @@
+from common_handlers import CommonHandlers
 from helper import json_response
+from middlewares import ErrorHandlerMiddleWare
 
 
 class Application:
@@ -11,3 +13,7 @@ class Application:
 
 
 app = Application()
+middleware=ErrorHandlerMiddleWare(
+    app=app,
+    exception_handler=CommonHandlers.generic_exception_handler
+)

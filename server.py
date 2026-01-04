@@ -6,6 +6,6 @@ if __name__ =="__main__":
     host="localhost"
     port=8800
 
-    with make_server(host,port,app.app) as server:
+    with make_server(host,port,app.middleware) as server:
         print(f"server listening on {host}:{port}")
         server.serve_forever()
