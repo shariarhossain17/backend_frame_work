@@ -1,24 +1,29 @@
 from common_handlers import CommonHandlers
 from helper import json_response
 from middlewares import ErrorHandlerMiddleWare
+from webob import Request, Response
 
-from webob import Request,Response
 class Application:
     def __init__(self):
-        pass
+        self.routes = {}
 
     def __call__(self, environ, start_response):
-        request=Request(environ)
-        response=Response()
+        request = Request(environ)
+        response = CommonHandlers.request_handler(self.routes, request)
+        return response(environ, start_response) 
+    
 
-        response.text="hello world"
-
+    def route(self, path):
+        def wrapper(handler):
+            print(handler)
+            self.routes[path] = handler
+            return handler
+        return wrapper
+    
   
-        return json_response(response.text,start_response)
-
 
 app = Application()
-middleware=ErrorHandlerMiddleWare(
+middleware = ErrorHandlerMiddleWare(
     app=app,
     exception_handler=CommonHandlers.generic_exception_handler
 )

@@ -1,6 +1,7 @@
 
 from constant import HttpStatus
 from helper import json_response
+from webob import Response,Request
 
 
 class CommonHandlers:
@@ -15,3 +16,13 @@ class CommonHandlers:
             start_response,
             status=HttpStatus.INTERNAL_SERVER_ERROR
         )
+    @staticmethod
+    def request_handler(routes,request):
+
+        response =Response()
+        for path,handler in routes.items():
+            if path==request.path:
+                handler(request,response)
+            
+      
+        return response    
