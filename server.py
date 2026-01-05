@@ -1,6 +1,7 @@
 from wsgiref.simple_server import make_server
 
 from app import app
+application =app.middleware
 
 if __name__ =="__main__":
     host="localhost"
