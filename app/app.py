@@ -4,7 +4,7 @@ from middlewares import ErrorHandlerMiddleWare
 from webob import Request, Response
 from constant import HttpStatus
 from parse import parse
-
+import inspect
 class Application:
     def __init__(self):
         self.routes = {}
@@ -35,16 +35,19 @@ class Application:
   
     def handle_request(self, request):
         response = Response()
-        
         handler, kwargs = self.find_handler(request_path=request.path)
         
         if handler is not None:
+            if inspect.isclass(handler):
+                handler = getattr(handler(), request.method.lower(), None)
+                if handler is None:
+                    raise AttributeError("Method not allowed", request.method)
+            
             handler(request, response, **kwargs)
         else:
             self.default_response(response)
             
         return response
-    
 
     
   
