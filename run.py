@@ -2,10 +2,10 @@
 Application entry point
 """
 from wsgiref.simple_server import make_server
+
 from api import middleware
 
-
-app=middleware
+application=middleware
 
 
 if __name__ == "__main__":
