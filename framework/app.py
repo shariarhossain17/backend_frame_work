@@ -4,6 +4,8 @@ Core Application class for the framework
 from webob import Request, Response
 from parse import parse
 import inspect
+from requests import Session as RequestsSession
+from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
 
 from .constants import HttpStatus
 
@@ -18,6 +20,13 @@ class Application:
     def __init__(self):
         """Initialize the application with an empty route dictionary"""
         self.routes = {}
+
+    """ add test client session"""
+
+    def test_session(self,base_url="http://testserver"):
+        session=RequestsSession()
+        session.mount(prefix=base_url,adapter=RequestsWSGIAdapter(self))
+        return session
 
     def __call__(self, environ, start_response):
         """

@@ -2,29 +2,37 @@
 Framework tests
 """
 import pytest
-from framework import Application
 
 
 
-@pytest.fixture
-def api():
-    """Fixture that provides the middleware-wrapped application"""
-    return Application()
+def test_class_based_handler_get(api, client):
+    response_text = "This is a GET request"
 
+    @api.route("/books")
+    class BookResource:
+        def get(self, req, resp):
+            resp.text = response_text
 
-def test_basic_route_adding(api):
-    """Test that routes can be added to the application"""
-    @api.route("/home")
-    def home(req, res):
-        res.text = "Hello world"
+    response = client.get("http://testserver/books")
+    assert response.text == response_text
 
-def test_route_overlap_throws_exception(api):
-    @api.route("/test")
-    def home(req,res):
-        res.text="first handler"
-    
-    with pytest.raises(AssertionError):
-        @api.route("/test")
-        def home2(req,res):
-            res.text="second handler"
+def test_class_based_handler_post(api, client):
+    response_text = "This is a POST request"
 
+    @api.route("/books")
+    class BookResource:
+        def post(self, req, resp):
+            resp.text = response_text
+
+    response = client.post("http://testserver/books")
+    assert response.text == response_text
+
+def test_class_based_handler_not_allowed_method(api, client):
+    @api.route("/books")
+    class BookResource:
+        def post(self, req, resp):
+            resp.text = "Only POST allowed"
+
+    # This should raise AttributeError (method not implemented)
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/books")
