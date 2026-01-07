@@ -18,3 +18,13 @@ def test_basic_route_adding(api):
     def home(req, res):
         res.text = "Hello world"
 
+def test_route_overlap_throws_exception(api):
+    @api.route("/test")
+    def home(req,res):
+        res.text="first handler"
+    
+    with pytest.raises(AssertionError):
+        @api.route("/test")
+        def home2(req,res):
+            res.text="second handler"
+

@@ -11,6 +11,8 @@ def home(request, response):
     """Home route handler"""
     response.text = "Hello from the HOME page"
 
+
+
 @app.route("/hello/{name}")
 def greeting(request, response, name):
     """Greeting route handler with parameter"""
