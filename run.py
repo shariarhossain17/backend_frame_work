@@ -5,6 +5,9 @@ from wsgiref.simple_server import make_server
 from api import middleware
 
 
+app=middleware
+
+
 if __name__ == "__main__":
     host = "localhost"
     port = 8000
