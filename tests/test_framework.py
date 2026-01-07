@@ -2,13 +2,14 @@
 Framework tests
 """
 import pytest
-from api import middleware
+from framework import Application
+
 
 
 @pytest.fixture
 def api():
     """Fixture that provides the middleware-wrapped application"""
-    return middleware
+    return Application()
 
 
 def test_basic_route_adding(api):
