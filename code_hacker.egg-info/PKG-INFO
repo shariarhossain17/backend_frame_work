@@ -1,3 +1,23 @@
+Metadata-Version: 2.1
+Name: code-hacker
+Version: 0.0.2
+Summary: code_hacker web Framework built for learning purposes.
+Author: Shahriar Hossain
+Author-email: shariarhossain23@gmail.com
+License: MIT
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
+Requires-Python: >=3.6.0
+Description-Content-Type: text/markdown
+
+
 # Code Hacker Framework
 
 A lightweight, modern Python web framework for building fast and flexible web applications and APIs.

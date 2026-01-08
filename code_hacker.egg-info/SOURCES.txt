@@ -1,0 +1,11 @@
+README.md
+setup.py
+code_hacker/__init__.py
+code_hacker/api.py
+code_hacker/middleware.py
+code_hacker/response.py
+code_hacker.egg-info/PKG-INFO
+code_hacker.egg-info/SOURCES.txt
+code_hacker.egg-info/dependency_links.txt
+code_hacker.egg-info/requires.txt
+code_hacker.egg-info/top_level.txt
