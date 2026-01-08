@@ -1,0 +1,6 @@
+[run]
+omit = 
+    venv/*
+    test_framework.py
+    conftest.py
+    server.py

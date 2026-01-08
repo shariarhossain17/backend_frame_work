@@ -6,6 +6,8 @@ from parse import parse
 import inspect
 from requests import Session as RequestsSession
 from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
+from jinja2 import Environment, FileSystemLoader
+import os
 
 from .constants import HttpStatus
 
@@ -17,11 +19,27 @@ class Application:
     Handles routing, request processing, and response generation.
     """
     
-    def __init__(self):
+    def __init__(self, templates_dir="templates"):
         """Initialize the application with an empty route dictionary"""
         self.routes = {}
 
+        self.templates_env=Environment(
+            loader=FileSystemLoader(os.path.abspath(templates_dir))
+        )
+
+
+           
+    def template(self,template_name,context=None):
+        if context is None:
+            context={}
+        return self.templates_env.get_template(template_name).render(**context)
+
+        
+
+
     """ add test client session"""
+
+
 
     def test_session(self,base_url="http://testserver"):
         session=RequestsSession()
@@ -42,6 +60,13 @@ class Application:
         request = Request(environ)
         response = self.handle_request(request)
         return response(environ, start_response)
+ 
+        
+    
+    
+    def add_route(self,path,handler):
+        assert path not in self.routes, "such route already exist"
+        self.routes[path]=handler
 
     def route(self, path):
         """
@@ -61,7 +86,7 @@ class Application:
         assert path not in self.routes, "Such route already exists."
         
         def wrapper(handler):
-            self.routes[path] = handler
+            self.add_route(path,handler)
             return handler
         
         return wrapper
