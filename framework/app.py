@@ -45,13 +45,17 @@ class Application:
         response = self.handle_request(request)
         return response(environ, start_response)
 
-    def add_route(self, path, handler):
+    def add_route(self, path, handler,allowed_methods=None):
         assert path not in self.routes, "Such route already exists."
-        self.routes[path] = handler
 
-    def route(self, path):
+        if allowed_methods is None:
+             allowed_methods = ["get", "post", "put", "patch", "delete", "options"]
+       
+        self.routes[path] = {"handler": handler, "allowed_methods": [method.lower() for method in allowed_methods]}
+
+    def route(self, path,allowed_methods=None):
         def wrapper(handler):
-            self.add_route(path, handler)  # Reuse add_route logic
+            self.add_route(path, handler,allowed_methods)  # Reuse add_route logic
             return handler
         return wrapper
 
@@ -60,21 +64,31 @@ class Application:
         response.text = "Not found."
 
     def find_handler(self, request_path):
-        for path, handler in self.routes.items():
+        for path, handler_data in self.routes.items():
             parse_result = parse(path, request_path)
             if parse_result is not None:
-                return handler, parse_result.named
+                return handler_data, parse_result.named
         return None, None
+    
+    
 
     def handle_request(self, request):
         response = Response()
-        handler, kwargs = self.find_handler(request_path=request.path)
+        handler_data, kwargs = self.find_handler(request_path=request.path)
         
         try:
-            if handler is not None:
+            if handler_data is not None:
+                handler = handler_data["handler"]
+                allowed_methods = handler_data["allowed_methods"]
+                
                 if inspect.isclass(handler):
+                    # Class-based handler 
                     handler = getattr(handler(), request.method.lower(), None)
                     if handler is None:
+                        raise AttributeError("Method not allowed", request.method)
+                else:
+                    # Function-based handler 
+                    if request.method.lower() not in allowed_methods:
                         raise AttributeError("Method not allowed", request.method)
                 
                 handler(request, response, **kwargs)
@@ -82,12 +96,11 @@ class Application:
                 self.default_response(response)
         except Exception as e:
             if self.exception_handler is None:
-                raise e  # Re-raise if no custom handler
+                raise e
             else:
                 self.exception_handler(request, response, e)
         
         return response
-
     def test_session(self, base_url="http://testserver"):
         session = RequestsSession()
         session.mount(prefix=base_url, adapter=RequestsWSGIAdapter(self))
