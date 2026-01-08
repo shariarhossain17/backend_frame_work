@@ -3,7 +3,51 @@ Framework tests
 """
 import pytest
 
+from framework import Application
 
+
+
+def test_basic_route_adding(api):
+    @api.route("/home")
+    def home(req, resp):
+        resp.text = "Hello World"
+
+def test_route_overlap_throws_exception(api):
+    @api.route("/test")
+    def home(req, resp):
+        resp.text = "First handler"
+
+    # Test that duplicate route raises AssertionError
+    with pytest.raises(AssertionError):
+        @api.route("/test")
+        def home2(req, resp):
+            resp.text = "Second handler"
+
+def test_client_can_send_requests(api, client):
+    RESPONSE_TEXT = "Hello from test client"
+
+    @api.route("/test")
+    def test_handler(req, resp):
+        resp.text = RESPONSE_TEXT
+
+    response = client.get("http://testserver/test")
+    assert response.text == RESPONSE_TEXT
+
+def test_parameterized_route(api, client):
+    @api.route("/hello/{name}")
+    def hello(req, resp, name):
+        resp.text = f"Hello {name}"
+
+    # Test multiple parameter values
+    assert client.get("http://testserver/hello/Alice").text == "Hello Alice"
+    assert client.get("http://testserver/hello/Bob").text == "Hello Bob"
+    assert client.get("http://testserver/hello/Charlie").text == "Hello Charlie"
+
+def test_default_404_response(client):
+    response = client.get("http://testserver/nonexistent")
+    
+    assert response.status_code == 404
+    assert response.text == "Not found."
 
 def test_class_based_handler_get(api, client):
     response_text = "This is a GET request"
@@ -47,7 +91,6 @@ def test_alternative_route(api, client):
 
     assert client.get("http://testserver/alternative").text == response_text
 
-
 def test_template(api, client):
     @api.route("/html")
     def html_handler(req, resp):
@@ -61,8 +104,6 @@ def test_template(api, client):
     assert "text/html" in response.headers["Content-Type"]
     assert "Some Title" in response.text
     assert "Some Name" in response.text
-
-
 
 def test_custom_exception_handler(api, client):
     def on_exception(req, resp, exc):
@@ -78,3 +119,28 @@ def test_custom_exception_handler(api, client):
 
     assert response.text == "AttributeErrorHappened"
 
+def test_404_is_returned_for_nonexistent_static_file(tmpdir_factory):
+    empty_static_dir = tmpdir_factory.mktemp("empty_static")
+    api = Application(static_dir=str(empty_static_dir))
+    client = api.test_session()
+    assert client.get("http://testserver/main.css").status_code == 404
+
+FILE_DIR = "css"
+FILE_NAME = "main.css"
+FILE_CONTENTS = "body {background-color: red}"
+
+def _create_static(static_dir):
+    asset = static_dir.mkdir(FILE_DIR).join(FILE_NAME)
+    asset.write(FILE_CONTENTS)
+    return asset
+
+def test_assets_are_served(tmpdir_factory):
+    static_dir = tmpdir_factory.mktemp("static")
+    _create_static(static_dir)
+    api = Application(static_dir=str(static_dir))
+    client = api.test_session()
+
+    response = client.get(f"http://testserver/{FILE_DIR}/{FILE_NAME}")
+
+    assert response.status_code == 200
+    assert response.text == FILE_CONTENTS

@@ -8,6 +8,7 @@ from requests import Session as RequestsSession
 from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
 from jinja2 import Environment, FileSystemLoader
 import os
+from whitenoise import WhiteNoise
 
 from .constants import HttpStatus
 
@@ -19,7 +20,7 @@ class Application:
     Handles routing, request processing, and response generation.
     """
     
-    def __init__(self, templates_dir="templates"):
+    def __init__(self, templates_dir="templates",static_dir="static"):
         """Initialize the application with an empty route dictionary"""
         self.routes = {}
 
@@ -28,6 +29,7 @@ class Application:
         )
 
         self.exception_handler=None
+        self.whitenoise = WhiteNoise(self.wsgi_app, root=static_dir)
 
 
 
@@ -62,12 +64,13 @@ class Application:
         Returns:
             Response from handle_request
         """
+        
+        return self.wsgi_app(environ, start_response)
+ 
+    def wsgi_app(self, environ, start_response):
         request = Request(environ)
         response = self.handle_request(request)
         return response(environ, start_response)
- 
-        
-    
     
     def add_route(self,path,handler):
         assert path not in self.routes, "such route already exist"
