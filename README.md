@@ -48,9 +48,7 @@ class BooksResource:
         response.json = {"status": "created"}
         response.status_code = 201
 
-# 4. Django-style route registration with method restrictions
-def api_handler(request, response):
-    response.json = {"data": "API response"}
+
 
 app.add_route("/api/data", api_handler, allowed_methods=["GET", "POST"])
 ```
