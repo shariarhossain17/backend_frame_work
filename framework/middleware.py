@@ -1,47 +1,29 @@
-"""
-Middleware classes for the framework
-"""
-class ErrorHandlerMiddleWare:
-    """
-    Middleware for handling exceptions in WSGI applications
-    
-    Wraps an application and catches any exceptions, passing them
-    to a configured exception handler.
-    """
-    
-    def __init__(self, app, exception_handler: callable):
-        """
-        Initialize the error handler middleware
-        
-        Args:
-            app: The WSGI application to wrap
-            exception_handler: Callable that handles exceptions
-        """
-        self.wrapped_app = app
-        self.exception_handler = exception_handler
+
+
+from webob import Request
+
+
+class Middleware:
+    def __init__(self, app):
+        self.app = app
 
     def __call__(self, environ, start_response):
-        """
-        WSGI application interface
-        
-        Args:
-            environ: WSGI environ dictionary
-            start_response: WSGI start_response callable
-        
-        Returns:
-            Response from wrapped app or exception handler
-        """
-        try:
-            return self.wrapped_app(environ, start_response)
-        except Exception as e:
-            return self.exception_handler(environ, start_response, e)
-    
-    def __getattr__(self, name):
-        """
-        Delegate attribute access to the wrapped app
-        
-        This allows the middleware to be used as a transparent proxy,
-        so methods like route() can be called directly on the middleware.
-        """
-        return getattr(self.wrapped_app, name)
+        request = Request(environ)
+        response = self.handle_request(request)
+        return response(environ, start_response)
 
+    def add(self, middleware_cls):
+        self.app = middleware_cls(self.app)
+
+    def process_request(self, req):
+        pass
+
+    def process_response(self, req, resp):
+        pass
+
+    def handle_request(self, request):
+        self.process_request(request)
+        response = self.app.handle_request(request)
+        self.process_response(request, response)
+        
+        return response

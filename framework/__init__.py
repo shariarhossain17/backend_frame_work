@@ -2,10 +2,11 @@
 Core framework package
 """
 from .app import Application
-from .middleware import ErrorHandlerMiddleWare
+from .errorhandlermiddleware import ErrorHandlerMiddleWare
 from .handlers import CommonHandlers
 from .utils import json_response
 from .constants import HttpStatus
+from .middleware import Middleware
 
 __all__ = [
     'Application',
@@ -13,5 +14,6 @@ __all__ = [
     'CommonHandlers',
     'json_response',
     'HttpStatus',
+    'Middleware'
 ]
 
