@@ -8,6 +8,7 @@ from requests import Session as RequestsSession
 from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
 from jinja2 import Environment, FileSystemLoader
 import os
+from whitenoise import WhiteNoise
 
 from .constants import HttpStatus
 
@@ -19,7 +20,7 @@ class Application:
     Handles routing, request processing, and response generation.
     """
     
-    def __init__(self, templates_dir="templates"):
+    def __init__(self, templates_dir="templates",static_dir="static"):
         """Initialize the application with an empty route dictionary"""
         self.routes = {}
 
@@ -27,7 +28,13 @@ class Application:
             loader=FileSystemLoader(os.path.abspath(templates_dir))
         )
 
+        self.exception_handler=None
+        self.whitenoise = WhiteNoise(self.wsgi_app, root=static_dir)
 
+
+
+    def add_exception_handler(self, exception_handler):
+        self.exception_handler = exception_handler
            
     def template(self,template_name,context=None):
         if context is None:
@@ -57,12 +64,13 @@ class Application:
         Returns:
             Response from handle_request
         """
+        
+        return self.wsgi_app(environ, start_response)
+ 
+    def wsgi_app(self, environ, start_response):
         request = Request(environ)
         response = self.handle_request(request)
         return response(environ, start_response)
- 
-        
-    
     
     def add_route(self,path,handler):
         assert path not in self.routes, "such route already exist"
@@ -116,30 +124,25 @@ class Application:
             if parse_result is not None:
                 return handler, parse_result.named
         return None, None
-  
+
     def handle_request(self, request):
-        """
-        Process a request and generate a response
-        
-        Args:
-            request: WebOb Request object
-        
-        Returns:
-            WebOb Response object
-        """
         response = Response()
         handler, kwargs = self.find_handler(request_path=request.path)
         
-        if handler is not None:
-            if inspect.isclass(handler):
-                # Class-based handler - get method based on HTTP verb
-                handler = getattr(handler(), request.method.lower(), None)
-                if handler is None:
-                    raise AttributeError("Method not allowed", request.method)
-            
-            handler(request, response, **kwargs)
-        else:
-            self.default_response(response)
-            
+        try:
+            if handler is not None:
+                if inspect.isclass(handler):
+                    handler = getattr(handler(), request.method.lower(), None)
+                    if handler is None:
+                        raise AttributeError("Method not allowed", request.method)
+                
+                handler(request, response, **kwargs)
+            else:
+                self.default_response(response)
+        except Exception as e:
+            if self.exception_handler is None:
+                raise e  # Re-raise if no custom handler
+            else:
+                self.exception_handler(request, response, e)
+        
         return response
-
