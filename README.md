@@ -48,6 +48,7 @@ class BooksResource:
         response.json = {"status": "created"}
         response.status_code = 201
 
+
 ```
 
 ## How to Send Responses
