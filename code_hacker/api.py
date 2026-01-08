@@ -1,15 +1,18 @@
 # api.py
 
-import os
 import inspect
-from parse import parse
-from webob import Request, Response
-from requests import Session as RequestsSession
-from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
+import os
+
 from jinja2 import Environment, FileSystemLoader
+from parse import parse
+from requests import Session as RequestsSession
+from webob import Request
 from whitenoise import WhiteNoise
+from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
+
 from .middleware import Middleware
 from .response import Response
+
 
 class Application:
     def __init__(self, templates_dir="templates", static_dir="static"):
@@ -71,7 +74,6 @@ class Application:
                 return handler_data, parse_result.named
         return None, None
     
-    
 
     def handle_request(self, request):
         response = Response()
@@ -112,3 +114,4 @@ class Application:
             context = {}
         
         return self.templates_env.get_template(template_name).render(**context)
+

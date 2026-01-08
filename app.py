@@ -1,10 +1,13 @@
 """
 Application route definitions
 """
-from framework import Application,Middleware
 import time
+
+from code_hacker import Application as API
+from code_hacker import Middleware
+
 # Create application instance
-app = Application(templates_dir="templates")
+app = API(templates_dir="templates")
 
 
 def custom_exception_handler(request, response, exception_cls):

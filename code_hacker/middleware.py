@@ -1,5 +1,4 @@
 
-
 from webob import Request
 
 
@@ -27,3 +26,4 @@ class Middleware:
         self.process_response(request, response)
         
         return response
+
