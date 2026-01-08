@@ -274,3 +274,27 @@ def test_manually_setting_body(api, client):
 
     assert "text/plain" in response.headers["Content-Type"]
     assert response.text == "Byte Body"
+
+
+def test_response_property_priority(api, client):
+    @api.route("/priority")
+    def priority_handler(req, resp):
+        resp.json = {"type": "json"}
+        resp.html = "<h1>HTML</h1>"
+        resp.text = "Plain text"  # Last one wins
+
+    response = client.get("http://testserver/priority")
+
+    assert "text/plain" in response.headers["Content-Type"]
+    assert response.text == "Plain text"
+
+def test_empty_response_handling(api, client):
+    @api.route("/empty")
+    def empty_handler(req, resp):
+        # Don't set any response properties
+        pass
+
+    response = client.get("http://testserver/empty")
+
+    assert response.status_code == 200
+    assert response.text == ""  # Empty body
