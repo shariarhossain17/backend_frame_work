@@ -2,7 +2,7 @@
 Application route definitions
 """
 from framework import Application,Middleware
-
+import time
 # Create application instance
 app = Application(templates_dir="templates")
 
@@ -80,12 +80,14 @@ class UserResource:
 
 class SimpleCustomMiddleware(Middleware):
     def process_request(self, req):
-        print("Processing request", req.url)
-
+        import time
+        req.start_time = time.time()
+    
     def process_response(self, req, resp):
-        print("Processing response", req.url)
+        if hasattr(req, 'start_time'):
+            duration = time.time() - req.start_time
+            resp.headers['X-Response-Time'] = f"{duration:.4f}s"
 
 app.add_middleware(SimpleCustomMiddleware)
 
-app.ad
 
