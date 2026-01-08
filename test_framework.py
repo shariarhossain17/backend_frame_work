@@ -3,8 +3,7 @@ Framework tests
 """
 import pytest
 
-from framework import Application
-
+from framework import Application,Middleware
 
 
 def test_basic_route_adding(api):
@@ -123,7 +122,7 @@ def test_404_is_returned_for_nonexistent_static_file(tmpdir_factory):
     empty_static_dir = tmpdir_factory.mktemp("empty_static")
     api = Application(static_dir=str(empty_static_dir))
     client = api.test_session()
-    assert client.get("http://testserver/main.css").status_code == 404
+    assert client.get("http://testserver/static/main.css").status_code == 404
 
 FILE_DIR = "css"
 FILE_NAME = "main.css"
@@ -140,7 +139,36 @@ def test_assets_are_served(tmpdir_factory):
     api = Application(static_dir=str(static_dir))
     client = api.test_session()
 
-    response = client.get(f"http://testserver/{FILE_DIR}/{FILE_NAME}")
+    response = client.get(f"http://testserver/static/{FILE_DIR}/{FILE_NAME}")
 
     assert response.status_code == 200
     assert response.text == FILE_CONTENTS
+
+
+
+def test_middleware_methods_are_called(api, client):
+    process_request_called = False
+    process_response_called = False
+
+    class CallMiddlewareMethods(Middleware):
+        def __init__(self, app):
+            super().__init__(app)
+
+        def process_request(self, req):
+            nonlocal process_request_called
+            process_request_called = True
+
+        def process_response(self, req, resp):
+            nonlocal process_response_called
+            process_response_called = True
+
+    api.add_middleware(CallMiddlewareMethods)
+
+    @api.route('/')
+    def index(req, resp):
+        resp.text = "YOLO"
+
+    client.get('http://testserver/')
+
+    assert process_request_called is True
+    assert process_response_called is True
