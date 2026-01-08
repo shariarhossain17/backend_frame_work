@@ -48,9 +48,6 @@ class BooksResource:
         response.json = {"status": "created"}
         response.status_code = 201
 
-
-
-app.add_route("/api/data", api_handler, allowed_methods=["GET", "POST"])
 ```
 
 ## How to Send Responses
