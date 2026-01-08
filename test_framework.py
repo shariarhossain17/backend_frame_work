@@ -172,3 +172,56 @@ def test_middleware_methods_are_called(api, client):
 
     assert process_request_called is True
     assert process_response_called is True
+
+
+
+def test_allowed_methods_for_function_based_handlers(api, client):
+    @api.route("/home", allowed_methods=["post"])
+    def home(req, resp):
+        resp.text = "Hello"
+
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/home")
+
+    assert client.post("http://testserver/home").text == "Hello"
+
+
+
+
+
+def test_default_allowed_methods(api, client):
+    @api.route("/default")
+    def default_handler(req, resp):
+        resp.text = f"Method: {req.method}"
+
+    # All these methods should work by default
+    assert client.get("http://testserver/default").text == "Method: GET"
+    assert client.post("http://testserver/default").text == "Method: POST"
+    assert client.put("http://testserver/default").text == "Method: PUT"
+
+def test_add_route_with_allowed_methods(api, client):
+    def restricted_handler(req, resp):
+        resp.text = "Only PUT allowed"
+
+    api.add_route("/restricted", restricted_handler, allowed_methods=["put"])
+
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/restricted")
+
+    assert client.put("http://testserver/restricted").text == "Only PUT allowed"
+
+def test_class_based_handlers_still_work(api, client):
+    @api.route("/resource")
+    class TestResource:
+        def get(self, req, resp):
+            resp.text = "GET method"
+        
+        def post(self, req, resp):
+            resp.text = "POST method"
+
+    assert client.get("http://testserver/resource").text == "GET method"
+    assert client.post("http://testserver/resource").text == "POST method"
+    
+    # PUT not implemented - should raise AttributeError
+    with pytest.raises(AttributeError):
+        client.put("http://testserver/resource")
