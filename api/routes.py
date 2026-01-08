@@ -4,12 +4,21 @@ Application route definitions
 from framework import Application
 
 # Create application instance
-app = Application()
+app = Application(templates_dir="templates")
 
 @app.route("/home")
 def home(request, response):
     """Home route handler"""
     response.text = "Hello from the HOME page"
+
+
+
+@app.route("/template")
+def page_handler(req, resp):
+    resp.body = app.template("index.html", context={
+        "name": "beckend frame work", 
+        "title": "Best Framework"
+    }).encode()
 
 
 #django style route

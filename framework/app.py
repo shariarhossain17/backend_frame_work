@@ -6,6 +6,8 @@ from parse import parse
 import inspect
 from requests import Session as RequestsSession
 from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
+from jinja2 import Environment, FileSystemLoader
+import os
 
 from .constants import HttpStatus
 
@@ -17,9 +19,23 @@ class Application:
     Handles routing, request processing, and response generation.
     """
     
-    def __init__(self):
+    def __init__(self, templates_dir="templates"):
         """Initialize the application with an empty route dictionary"""
         self.routes = {}
+
+        self.templates_env=Environment(
+            loader=FileSystemLoader(os.path.abspath(templates_dir))
+        )
+
+
+           
+    def template(self,template_name,context=None):
+        if context is None:
+            context={}
+        return self.templates_env.get_template(template_name).render(**context)
+
+        
+
 
     """ add test client session"""
 
@@ -44,6 +60,8 @@ class Application:
         request = Request(environ)
         response = self.handle_request(request)
         return response(environ, start_response)
+ 
+        
     
     
     def add_route(self,path,handler):
