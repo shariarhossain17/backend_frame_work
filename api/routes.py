@@ -1,7 +1,7 @@
 """
 Application route definitions
 """
-from framework import Application
+from framework import Application,Middleware
 
 # Create application instance
 app = Application(templates_dir="templates")
@@ -74,4 +74,18 @@ class UserResource:
     def delete(self, req, resp, id):
         """DELETE /users/{id} - Delete user by ID"""
         resp.text = f"Delete user {id}"
+
+
+# add middleware
+
+class SimpleCustomMiddleware(Middleware):
+    def process_request(self, req):
+        print("Processing request", req.url)
+
+    def process_response(self, req, resp):
+        print("Processing response", req.url)
+
+app.add_middleware(SimpleCustomMiddleware)
+
+app.ad
 
