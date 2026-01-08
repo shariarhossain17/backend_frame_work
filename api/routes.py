@@ -12,6 +12,13 @@ def home(request, response):
     response.text = "Hello from the HOME page"
 
 
+#django style route
+
+def sample_handler(req,res):
+    res.text="Django style route reigistration"
+
+app.add_route("/sample",sample_handler)
+
 
 @app.route("/hello/{name}")
 def greeting(request, response, name):

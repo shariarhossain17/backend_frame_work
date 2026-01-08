@@ -36,3 +36,13 @@ def test_class_based_handler_not_allowed_method(api, client):
     # This should raise AttributeError (method not implemented)
     with pytest.raises(AttributeError):
         client.get("http://testserver/books")
+
+def test_alternative_route(api, client):
+    response_text = "Alternative way to add a route"
+
+    def home(req, resp):
+        resp.text = response_text
+
+    api.add_route("/alternative", home)
+
+    assert client.get("http://testserver/alternative").text == response_text

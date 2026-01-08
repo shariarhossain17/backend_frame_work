@@ -23,6 +23,8 @@ class Application:
 
     """ add test client session"""
 
+
+
     def test_session(self,base_url="http://testserver"):
         session=RequestsSession()
         session.mount(prefix=base_url,adapter=RequestsWSGIAdapter(self))
@@ -42,6 +44,11 @@ class Application:
         request = Request(environ)
         response = self.handle_request(request)
         return response(environ, start_response)
+    
+    
+    def add_route(self,path,handler):
+        assert path not in self.routes, "such route already exist"
+        self.routes[path]=handler
 
     def route(self, path):
         """
@@ -61,7 +68,7 @@ class Application:
         assert path not in self.routes, "Such route already exists."
         
         def wrapper(handler):
-            self.routes[path] = handler
+            self.add_route(path,handler)
             return handler
         
         return wrapper
