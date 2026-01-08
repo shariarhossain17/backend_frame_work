@@ -1,6 +1,6 @@
 import pytest
 
-from framework import Application
+from code_hacker import Application
 
 
 

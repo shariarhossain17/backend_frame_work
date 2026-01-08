@@ -39,3 +39,4 @@ class Response:
         if self.text is not None:
             self.body = self.text.encode()
             self.content_type = "text/plain"
+
