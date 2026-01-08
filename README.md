@@ -4,14 +4,14 @@ A lightweight, modern Python web framework for building fast and flexible web ap
 
 ## Features
 
-- 🚀 **Simple Routing**: Easy-to-use route decorators and function/class-based handlers
-- 🎨 **Template Support**: Built-in Jinja2 template rendering
-- 📦 **Static Files**: Automatic static file serving with WhiteNoise
+- **Simple Routing**: Easy-to-use route decorators and function/class-based handlers
+- **Template Support**: Built-in Jinja2 template rendering
+- **Static Files**: Automatic static file serving with WhiteNoise
 - 🔧 **Middleware**: Custom middleware support for request/response processing
-- ✅ **Type-Safe Responses**: JSON, HTML, and text response helpers
-- 🧪 **Testing**: Built-in test client for easy testing
+- **Type-Safe Responses**: JSON, HTML, and text response helpers
+- **Testing**: Built-in test client for easy testing
 - 📝 **Flexible Handlers**: Support for both function-based and class-based handlers
-- 🛡️ **Exception Handling**: Custom exception handlers for error management
+- **Exception Handling**: Custom exception handlers for error management
 
 ## Installation
 
@@ -22,7 +22,7 @@ pip install code-hacker
 Or install from source:
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/shariarhossain17/backend_frame_work>
 cd backend_frame_work
 pip install -e .
 ```
@@ -45,7 +45,7 @@ def home(request, response):
 # Run the application
 if __name__ == "__main__":
     from wsgiref.simple_server import make_server
-    
+
     with make_server("localhost", 8000, app) as server:
         print("Server running on http://localhost:8000")
         server.serve_forever()
@@ -129,15 +129,15 @@ class BooksResource:
     def get(self, request, response):
         """Handle GET /books"""
         response.json = {"books": []}
-    
+
     def post(self, request, response):
         """Handle POST /books"""
         response.json = {"status": "created"}
-    
+
     def put(self, request, response):
         """Handle PUT /books"""
         response.json = {"status": "updated"}
-    
+
     def delete(self, request, response):
         """Handle DELETE /books"""
         response.status_code = 204
@@ -147,7 +147,7 @@ class BooksResource:
 class UserResource:
     def get(self, request, response, id):
         response.json = {"id": id, "name": "User"}
-    
+
     def put(self, request, response, id):
         response.json = {"id": id, "updated": True}
 ```
@@ -212,19 +212,21 @@ app = API(templates_dir="templates")  # Specify your templates directory
 ### Template Example
 
 **templates/index.html:**
+
 ```html
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>{{ title }}</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Welcome to {{ name }}</h1>
-</body>
+  </body>
 </html>
 ```
 
 **app.py:**
+
 ```python
 @app.route("/")
 def index(request, response):
@@ -250,7 +252,7 @@ app = API(static_dir="static")  # Your static files directory
 
 ```html
 <!-- In your templates -->
-<link rel="stylesheet" href="/static/css/main.css">
+<link rel="stylesheet" href="/static/css/main.css" />
 <script src="/static/js/app.js"></script>
 ```
 
@@ -270,7 +272,7 @@ class TimingMiddleware(Middleware):
     def process_request(self, request):
         # Called before request is handled
         request.start_time = time.time()
-    
+
     def process_response(self, request, response):
         # Called after request is handled
         if hasattr(request, 'start_time'):
@@ -287,7 +289,7 @@ app.add_middleware(TimingMiddleware)
 class LoggingMiddleware(Middleware):
     def process_request(self, request):
         print(f"[{time.time()}] {request.method} {request.path}")
-    
+
     def process_response(self, request, response):
         print(f"[{time.time()}] Response: {response.status_code}")
 
@@ -347,7 +349,7 @@ def test_home_route(api, client):
     @api.route("/")
     def home(request, response):
         response.text = "Hello, World!"
-    
+
     response = client.get("http://testserver/")
     assert response.text == "Hello, World!"
     assert response.status_code == 200
@@ -356,7 +358,7 @@ def test_json_response(api, client):
     @api.route("/api/data")
     def data(request, response):
         response.json = {"key": "value"}
-    
+
     response = client.get("http://testserver/api/data")
     assert response.json()["key"] == "value"
     assert response.headers["Content-Type"] == "application/json"
@@ -391,7 +393,7 @@ app.add_exception_handler(exception_handler)
 class TimingMiddleware(Middleware):
     def process_request(self, req):
         req.start_time = time.time()
-    
+
     def process_response(self, req, resp):
         if hasattr(req, 'start_time'):
             duration = time.time() - req.start_time
@@ -420,14 +422,14 @@ def get_users(request, response):
 class UserResource:
     def get(self, request, response, id):
         response.json = {"id": id, "name": f"User {id}"}
-    
+
     def delete(self, request, response, id):
         response.status_code = 204
 
 # Run server
 if __name__ == "__main__":
     from wsgiref.simple_server import make_server
-    
+
     with make_server("localhost", 8000, app) as server:
         print("Server running on http://localhost:8000")
         server.serve_forever()
@@ -509,4 +511,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 For issues and questions, please open an issue on the GitHub repository.
-
