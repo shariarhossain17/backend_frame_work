@@ -11,7 +11,11 @@ DESCRIPTION = "code_hacker web Framework built for learning purposes."
 EMAIL = "shariarhossain23@gmail.com"  
 AUTHOR = "Shahriar Hossain"  
 REQUIRES_PYTHON = ">=3.6.0"
+# Change from:
 VERSION = "0.0.1"
+
+# To:
+VERSION = "0.0.2"
 
 # Framework dependencies
 REQUIRED = [
