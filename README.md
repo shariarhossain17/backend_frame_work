@@ -435,47 +435,6 @@ from waitress import serve
 serve(app, host='0.0.0.0', port=8000)
 ```
 
-## Testing
-
-Code Hacker includes a built-in test client for easy testing:
-
-```python
-import pytest
-from code_hacker import Application as API
-
-@pytest.fixture
-def api():
-    return API()
-
-@pytest.fixture
-def client(api):
-    return api.test_session()
-
-def test_home_route(api, client):
-    @api.route("/")
-    def home(request, response):
-        response.text = "Hello, World!"
-
-    response = client.get("http://testserver/")
-    assert response.text == "Hello, World!"
-    assert response.status_code == 200
-
-def test_json_response(api, client):
-    @api.route("/api/data")
-    def data(request, response):
-        response.json = {"key": "value"}
-
-    response = client.get("http://testserver/api/data")
-    assert response.json()["key"] == "value"
-    assert response.headers["Content-Type"] == "application/json"
-```
-
-Run tests:
-
-```bash
-pytest test_code_hacker.py
-```
-
 ## Response Format Reference
 
 ### Required Response Format
@@ -515,75 +474,6 @@ response.text = "Hello, World!"
 3. **Content-Type is automatically set** based on the response property used
 4. **Priority order**: `text` > `html` > `json` (if multiple are set)
 5. **Custom headers** can be added via `response.headers["Header-Name"] = "value"`
-
-## Project Structure
-
-```
-project/
-├── code_hacker/          # Framework package
-│   ├── __init__.py
-│   ├── api.py           # Application class
-│   ├── middleware.py    # Middleware base class
-│   └── response.py      # Response class
-├── app.py               # Your application routes
-├── conftest.py          # Test fixtures
-├── test_code_hacker.py  # Test suite
-├── static/              # Static files
-│   └── main.css
-└── templates/           # Jinja2 templates
-    └── index.html
-```
-
-## API Reference
-
-### Application Class
-
-#### Constructor
-
-```python
-app = API(templates_dir="templates", static_dir="static")
-```
-
-- `templates_dir`: Directory containing Jinja2 templates (default: "templates")
-- `static_dir`: Directory containing static files (default: "static")
-
-#### Methods
-
-- `route(path, allowed_methods=None)`: Decorator to register a route
-- `add_route(path, handler, allowed_methods=None)`: Explicitly register a route
-- `add_middleware(middleware_cls)`: Register middleware
-- `add_exception_handler(handler)`: Register exception handler
-- `template(template_name, context=None)`: Render a Jinja2 template
-- `test_session(base_url="http://testserver")`: Create a test client
-
-### Response Object
-
-#### Properties
-
-- `json`: Set JSON response (sets content-type to `application/json`)
-- `html`: Set HTML response (sets content-type to `text/html`)
-- `text`: Set plain text response (sets content-type to `text/plain`)
-- `body`: Set raw body as bytes
-- `content_type`: Set content-type header
-- `status_code`: Set HTTP status code (default: 200)
-- `headers`: Dictionary of custom headers
-
-### Middleware Class
-
-Override these methods in your middleware:
-
-- `process_request(request)`: Called before request handling
-- `process_response(request, response)`: Called after request handling
-
-## Requirements
-
-- Python 3.7+
-- webob
-- jinja2
-- whitenoise
-- parse
-- requests
-- wsgiadapter
 
 ## License
 

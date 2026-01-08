@@ -12,10 +12,10 @@ EMAIL = "shariarhossain23@gmail.com"
 AUTHOR = "Shahriar Hossain"  
 REQUIRES_PYTHON = ">=3.6.0"
 # Change from:
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 # To:
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 
 # Framework dependencies
 REQUIRED = [
