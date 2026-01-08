@@ -1,124 +1,53 @@
-"""
-Core Application class for the framework
-"""
-from webob import Request, Response
-from parse import parse
+# api.py
+
+import os
 import inspect
+from parse import parse
+from webob import Request, Response
 from requests import Session as RequestsSession
 from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
 from jinja2 import Environment, FileSystemLoader
-import os
 from whitenoise import WhiteNoise
 
-from .constants import HttpStatus
-
-
 class Application:
-    """
-    Main WSGI application class
-    
-    Handles routing, request processing, and response generation.
-    """
-    
-    def __init__(self, templates_dir="templates",static_dir="static"):
-        """Initialize the application with an empty route dictionary"""
+    def __init__(self, templates_dir="templates", static_dir="static"):
         self.routes = {}
-
-        self.templates_env=Environment(
+        
+        self.templates_env = Environment(
             loader=FileSystemLoader(os.path.abspath(templates_dir))
         )
-
-        self.exception_handler=None
+        
+        self.exception_handler = None
+        
+        # Initialize WhiteNoise for static file serving
         self.whitenoise = WhiteNoise(self.wsgi_app, root=static_dir)
 
-
+    def __call__(self, environ, start_response):
+        return self.whitenoise(environ, start_response)
 
     def add_exception_handler(self, exception_handler):
         self.exception_handler = exception_handler
-           
-    def template(self,template_name,context=None):
-        if context is None:
-            context={}
-        return self.templates_env.get_template(template_name).render(**context)
 
-        
-
-
-    """ add test client session"""
-
-
-
-    def test_session(self,base_url="http://testserver"):
-        session=RequestsSession()
-        session.mount(prefix=base_url,adapter=RequestsWSGIAdapter(self))
-        return session
-
-    def __call__(self, environ, start_response):
-        """
-        WSGI application interface
-        
-        Args:
-            environ: WSGI environ dictionary
-            start_response: WSGI start_response callable
-        
-        Returns:
-            Response from handle_request
-        """
-        
-        return self.wsgi_app(environ, start_response)
- 
     def wsgi_app(self, environ, start_response):
         request = Request(environ)
         response = self.handle_request(request)
         return response(environ, start_response)
-    
-    def add_route(self,path,handler):
-        assert path not in self.routes, "such route already exist"
-        self.routes[path]=handler
+
+    def add_route(self, path, handler):
+        assert path not in self.routes, "Such route already exists."
+        self.routes[path] = handler
 
     def route(self, path):
-        """
-        Decorator for registering routes
-        
-        Args:
-            path: URL path pattern (supports parse-style patterns)
-        
-        Returns:
-            Decorator function that registers the handler
-        
-        Example:
-            @app.route("/home")
-            def home(request, response):
-                response.text = "Hello"
-        """
-        assert path not in self.routes, "Such route already exists."
-        
         def wrapper(handler):
-            self.add_route(path,handler)
+            self.add_route(path, handler)  # Reuse add_route logic
             return handler
-        
         return wrapper
-    
+
     def default_response(self, response):
-        """
-        Set default 404 response
-        
-        Args:
-            response: Response object to modify
-        """
-        response.status_code = HttpStatus.NOT_FOUND
-        response.text = "Route Not found."
-    
+        response.status_code = 404
+        response.text = "Not found."
+
     def find_handler(self, request_path):
-        """
-        Find a handler for the given request path
-        
-        Args:
-            request_path: The path from the request
-        
-        Returns:
-            Tuple of (handler, kwargs_dict) or (None, None) if not found
-        """
         for path, handler in self.routes.items():
             parse_result = parse(path, request_path)
             if parse_result is not None:
@@ -146,3 +75,14 @@ class Application:
                 self.exception_handler(request, response, e)
         
         return response
+
+    def test_session(self, base_url="http://testserver"):
+        session = RequestsSession()
+        session.mount(prefix=base_url, adapter=RequestsWSGIAdapter(self))
+        return session
+
+    def template(self, template_name, context=None):
+        if context is None:
+            context = {}
+        
+        return self.templates_env.get_template(template_name).render(**context)
