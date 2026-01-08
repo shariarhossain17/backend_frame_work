@@ -27,11 +27,14 @@ def home(request, response):
 
 @app.route("/template")
 def page_handler(req, resp):
-    resp.body = app.template("index.html", context={
-        "name": "beckend frame work", 
-        "title": "Best Framework"
-    }).encode()
+    resp.html = app.template("index.html", context={"name": "PoridhiFrame", "title": "Best Framework"})
+@app.route("/json")
+def json_handler(req, resp):
+    resp.json = {"name": "data", "type": "JSON"}
 
+@app.route("/text")
+def text_handler(req, resp):
+    resp.text = "This is a simple text"
 
 #django style route
 
