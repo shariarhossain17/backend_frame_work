@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: code-hacker
-Version: 0.0.2
+Version: 0.0.3
 Summary: code_hacker web Framework built for learning purposes.
 Author: Shahriar Hossain
 Author-email: shariarhossain23@gmail.com
@@ -22,18 +22,9 @@ Description-Content-Type: text/markdown
 
 A lightweight, modern Python web framework for building fast and flexible web applications and APIs.
 
-## Features
-
-- **Simple Routing**: Easy-to-use route decorators and function/class-based handlers
-- **Template Support**: Built-in Jinja2 template rendering
-- **Static Files**: Automatic static file serving with WhiteNoise
-- 🔧 **Middleware**: Custom middleware support for request/response processing
-- **Type-Safe Responses**: JSON, HTML, and text response helpers
-- **Testing**: Built-in test client for easy testing
-- 📝 **Flexible Handlers**: Support for both function-based and class-based handlers
-- **Exception Handling**: Custom exception handlers for error management
-
 ## Installation
+
+Install the package using pip:
 
 ```bash
 pip install code-hacker
@@ -42,108 +33,197 @@ pip install code-hacker
 Or install from source:
 
 ```bash
-git clone <https://github.com/shariarhossain17/backend_frame_work>
+git clone https://github.com/shariarhossain17/backend_frame_work
 cd backend_frame_work
 pip install -e .
 ```
 
-## Quick Start
+## Getting Started After Installation
 
-### Basic Application
+Once you've installed `code-hacker`, here's how to use it:
 
 ```python
 from code_hacker import Application as API
 
-# Create application instance
-app = API(templates_dir="templates", static_dir="static")
+# Create your application instance
+app = API()
 
-# Define a route with decorator
+# 1. Function-based route handler
 @app.route("/")
 def home(request, response):
     response.text = "Hello, World!"
 
-# Run the application
-if __name__ == "__main__":
-    from wsgiref.simple_server import make_server
+# 2. Route with URL parameters
+@app.route("/users/{name}")
+def get_user(request, response, name):
+    response.json = {"name": name, "message": f"Hello, {name}!"}
 
-    with make_server("localhost", 8000, app) as server:
-        print("Server running on http://localhost:8000")
-        server.serve_forever()
+# 3. Class-based handler (RESTful style)
+@app.route("/books")
+class BooksResource:
+    def get(self, request, response):
+        response.json = {"books": []}
+
+    def post(self, request, response):
+        response.json = {"status": "created"}
+        response.status_code = 201
+
+
 ```
 
-### Using with a WSGI Server
+## How to Send Responses
+
+The Code Hacker Framework provides a simple and intuitive response format. **You must follow this format** to send responses correctly.
+
+### Response Format
+
+The `response` object has three main properties for sending different types of responses:
+
+1. **`response.json`** - For JSON responses
+2. **`response.html`** - For HTML responses
+3. **`response.text`** - For plain text responses
+
+### Priority Order
+
+**Important**: If multiple response properties are set, the priority order is:
+
+1. `response.text` (highest priority)
+2. `response.html`
+3. `response.json` (lowest priority)
+
+The last property you set will be used for the response.
+
+### JSON Response
+
+Send JSON data using `response.json`. The framework automatically sets the `Content-Type` header to `application/json`.
 
 ```python
-from code_hacker import Application as API
-
-app = API()
-
-@app.route("/hello")
-def hello_handler(request, response):
-    response.text = "Hello from Code Hacker!"
-
-# Use with Gunicorn, uWSGI, or any WSGI server
-# gunicorn app:app
+@app.route("/api/users")
+def get_users(request, response):
+    response.json = {
+        "status": "success",
+        "data": {
+            "users": [
+                {"id": 1, "name": "Alice"},
+                {"id": 2, "name": "Bob"}
+            ]
+        }
+    }
 ```
 
-## Routing
+**Response Format:**
 
-### Function-Based Routes
+- Content-Type: `application/json`
+- Status Code: `200` (default)
+- Body: JSON serialized string
+
+### HTML Response
+
+Send HTML content using `response.html`. The framework automatically sets the `Content-Type` header to `text/html`.
 
 ```python
-from code_hacker import Application as API
+@app.route("/")
+def index(request, response):
+    response.html = "<h1>Welcome to Code Hacker</h1><p>This is an HTML response</p>"
+```
 
-app = API()
+**Using Templates:**
 
-# Simple GET route
+```python
 @app.route("/home")
 def home(request, response):
-    response.text = "Welcome Home!"
+    response.html = app.template("index.html", context={
+        "title": "Home Page",
+        "name": "Code Hacker"
+    })
+```
 
-# Route with URL parameters
-@app.route("/users/{name}")
-def user_profile(request, response, name):
+**Response Format:**
+
+- Content-Type: `text/html`
+- Status Code: `200` (default)
+- Body: HTML string
+
+### Plain Text Response
+
+Send plain text using `response.text`. The framework automatically sets the `Content-Type` header to `text/plain`.
+
+```python
+@app.route("/status")
+def status(request, response):
+    response.text = "Server is running!"
+```
+
+**Response Format:**
+
+- Content-Type: `text/plain`
+- Status Code: `200` (default)
+- Body: Plain text string
+
+### Custom Status Codes and Headers
+
+You can customize the status code and add custom headers:
+
+```python
+@app.route("/created")
+def create_resource(request, response):
+    response.json = {"message": "Resource created"}
+    response.status_code = 201
+    response.headers["X-Custom-Header"] = "Custom Value"
+```
+
+### Custom Body (Advanced)
+
+For binary data or custom content types:
+
+```python
+@app.route("/file")
+def download_file(request, response):
+    response.body = b"Binary data here"
+    response.content_type = "application/octet-stream"
+    response.status_code = 200
+```
+
+**Response Format Summary:**
+
+| Property        | Content-Type                | Use Case                     |
+| --------------- | --------------------------- | ---------------------------- |
+| `response.json` | `application/json`          | API responses, data exchange |
+| `response.html` | `text/html`                 | Web pages, templates         |
+| `response.text` | `text/plain`                | Simple text, status messages |
+| `response.body` | Manual (via `content_type`) | Binary data, custom formats  |
+
+## Complete Usage Examples
+
+### Basic Application Setup
+
+```python
+from code_hacker import Application as API
+
+app = API()
+
+@app.route("/")
+def home(request, response):
+    response.text = "Welcome to Code Hacker!"
+```
+
+### Routes with Parameters
+
+```python
+# String parameter
+@app.route("/hello/{name}")
+def greeting(request, response, name):
     response.text = f"Hello, {name}!"
 
-# Route with integer parameter
-@app.route("/posts/{id:d}")
-def get_post(request, response, id):
-    response.json = {"id": id, "title": "Post Title"}
-
-# Route with allowed methods
-@app.route("/api/data", allowed_methods=["GET", "POST"])
-def data_handler(request, response):
-    if request.method == "GET":
-        response.json = {"data": "some data"}
-    elif request.method == "POST":
-        response.json = {"status": "created"}
+# Integer parameter (use :d for digits)
+@app.route("/users/{id:d}")
+def get_user(request, response, id):
+    response.json = {"id": id, "name": f"User {id}"}
 ```
 
-### Django-Style Route Registration
+### Class-Based Handlers (RESTful Style)
 
 ```python
-from code_hacker import Application as API
-
-app = API()
-
-def my_handler(request, response):
-    response.text = "This is a Django-style route"
-
-# Register route explicitly
-app.add_route("/my-route", my_handler)
-
-# With allowed methods
-app.add_route("/restricted", my_handler, allowed_methods=["POST", "PUT"])
-```
-
-### Class-Based Handlers
-
-```python
-from code_hacker import Application as API
-
-app = API()
-
-# Class-based handler (RESTful style)
 @app.route("/books")
 class BooksResource:
     def get(self, request, response):
@@ -152,7 +232,8 @@ class BooksResource:
 
     def post(self, request, response):
         """Handle POST /books"""
-        response.json = {"status": "created"}
+        response.json = {"status": "created", "id": 123}
+        response.status_code = 201
 
     def put(self, request, response):
         """Handle PUT /books"""
@@ -161,77 +242,39 @@ class BooksResource:
     def delete(self, request, response):
         """Handle DELETE /books"""
         response.status_code = 204
-
-# Class handler with parameters
-@app.route("/users/{id:d}")
-class UserResource:
-    def get(self, request, response, id):
-        response.json = {"id": id, "name": "User"}
-
-    def put(self, request, response, id):
-        response.json = {"id": id, "updated": True}
 ```
 
-## Response Types
-
-### JSON Responses
+### Django-Style Route Registration
 
 ```python
-@app.route("/api/users")
-def get_users(request, response):
-    response.json = {
-        "users": [
-            {"id": 1, "name": "Alice"},
-            {"id": 2, "name": "Bob"}
-        ]
-    }
+def my_handler(request, response):
+    response.text = "Django-style route"
+
+# Register route explicitly
+app.add_route("/my-route", my_handler)
 ```
 
-### HTML Responses
+### HTTP Method Restrictions
 
 ```python
-@app.route("/")
-def index(request, response):
-    response.html = app.template("index.html", context={
-        "title": "My Website",
-        "name": "Code Hacker"
-    })
+# Only allow GET and POST
+@app.route("/api/products", allowed_methods=["GET", "POST"])
+def products_api(request, response):
+    if request.method == "GET":
+        response.json = {"products": []}
+    elif request.method == "POST":
+        response.json = {"status": "created"}
+        response.status_code = 201
+
+# Only allow POST
+@app.route("/api/submit", allowed_methods=["POST"])
+def submit_handler(request, response):
+    response.json = {"message": "Submitted successfully"}
 ```
 
-### Text Responses
+### Using Templates
 
-```python
-@app.route("/status")
-def status(request, response):
-    response.text = "Server is running!"
-```
-
-### Custom Body and Headers
-
-```python
-@app.route("/custom")
-def custom(request, response):
-    response.body = b"Custom binary data"
-    response.content_type = "application/octet-stream"
-    response.headers["X-Custom-Header"] = "Custom Value"
-    response.status_code = 200
-```
-
-## Templates
-
-Code Hacker uses Jinja2 for template rendering.
-
-### Setup Templates
-
-```python
-from code_hacker import Application as API
-
-app = API(templates_dir="templates")  # Specify your templates directory
-```
-
-### Template Example
-
-**templates/index.html:**
+**1. Create a template file** (`templates/index.html`):
 
 ```html
 <!DOCTYPE html>
@@ -241,46 +284,48 @@ app = API(templates_dir="templates")  # Specify your templates directory
   </head>
   <body>
     <h1>Welcome to {{ name }}</h1>
+    <p>{{ description }}</p>
   </body>
 </html>
 ```
 
-**app.py:**
+**2. Render the template in your route:**
 
 ```python
 @app.route("/")
 def index(request, response):
     response.html = app.template("index.html", context={
         "title": "Home Page",
-        "name": "Code Hacker"
+        "name": "Code Hacker",
+        "description": "A modern Python web framework"
     })
 ```
 
-## Static Files
+### Static Files
 
 Static files are automatically served from the `/static` path.
 
-### Setup Static Files
+**1. Place files in your static directory:**
 
-```python
-from code_hacker import Application as API
-
-app = API(static_dir="static")  # Your static files directory
+```
+project/
+└── static/
+    ├── css/
+    │   └── main.css
+    └── js/
+        └── app.js
 ```
 
-### Accessing Static Files
+**2. Reference in templates:**
 
 ```html
-<!-- In your templates -->
 <link rel="stylesheet" href="/static/css/main.css" />
 <script src="/static/js/app.js"></script>
 ```
 
-## Middleware
+### Middleware
 
-Create custom middleware to process requests and responses.
-
-### Basic Middleware
+Create custom middleware to process requests and responses:
 
 ```python
 from code_hacker import Application as API, Middleware
@@ -303,36 +348,11 @@ class TimingMiddleware(Middleware):
 app.add_middleware(TimingMiddleware)
 ```
 
-### Multiple Middleware
+### Exception Handling
+
+Register custom exception handlers:
 
 ```python
-class LoggingMiddleware(Middleware):
-    def process_request(self, request):
-        print(f"[{time.time()}] {request.method} {request.path}")
-
-    def process_response(self, request, response):
-        print(f"[{time.time()}] Response: {response.status_code}")
-
-class AuthMiddleware(Middleware):
-    def process_request(self, request):
-        # Check authentication
-        token = request.headers.get("Authorization")
-        if not token:
-            raise ValueError("Unauthorized")
-
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(AuthMiddleware)
-```
-
-## Exception Handling
-
-Register custom exception handlers to gracefully handle errors.
-
-```python
-from code_hacker import Application as API
-
-app = API()
-
 def custom_exception_handler(request, response, exception):
     response.status_code = 500
     response.json = {
@@ -345,49 +365,6 @@ app.add_exception_handler(custom_exception_handler)
 @app.route("/error")
 def error_handler(request, response):
     raise ValueError("Something went wrong!")
-```
-
-## Testing
-
-Code Hacker includes a built-in test client for easy testing.
-
-### Basic Test Example
-
-```python
-import pytest
-from code_hacker import Application as API
-
-@pytest.fixture
-def api():
-    return API()
-
-@pytest.fixture
-def client(api):
-    return api.test_session()
-
-def test_home_route(api, client):
-    @api.route("/")
-    def home(request, response):
-        response.text = "Hello, World!"
-
-    response = client.get("http://testserver/")
-    assert response.text == "Hello, World!"
-    assert response.status_code == 200
-
-def test_json_response(api, client):
-    @api.route("/api/data")
-    def data(request, response):
-        response.json = {"key": "value"}
-
-    response = client.get("http://testserver/api/data")
-    assert response.json()["key"] == "value"
-    assert response.headers["Content-Type"] == "application/json"
-```
-
-### Running Tests
-
-```bash
-pytest test_code_hacker.py
 ```
 
 ## Complete Example Application
@@ -405,7 +382,10 @@ app = API(templates_dir="templates", static_dir="static")
 # Custom exception handler
 def exception_handler(request, response, exception):
     response.status_code = 500
-    response.text = f"Error: {str(exception)}"
+    response.json = {
+        "error": str(exception),
+        "type": type(exception).__name__
+    }
 
 app.add_exception_handler(exception_handler)
 
@@ -432,93 +412,88 @@ def home(request, response):
 @app.route("/api/users")
 def get_users(request, response):
     response.json = {
-        "users": [
-            {"id": 1, "name": "Alice"},
-            {"id": 2, "name": "Bob"}
-        ]
+        "status": "success",
+        "data": {
+            "users": [
+                {"id": 1, "name": "Alice"},
+                {"id": 2, "name": "Bob"}
+            ]
+        }
     }
 
-@app.route("/users/{id:d}")
+@app.route("/api/users/{id:d}")
 class UserResource:
     def get(self, request, response, id):
-        response.json = {"id": id, "name": f"User {id}"}
+        response.json = {
+            "status": "success",
+            "data": {"id": id, "name": f"User {id}"}
+        }
 
     def delete(self, request, response, id):
         response.status_code = 204
-
-# Run server
-if __name__ == "__main__":
-    from wsgiref.simple_server import make_server
-
-    with make_server("localhost", 8000, app) as server:
-        print("Server running on http://localhost:8000")
-        server.serve_forever()
+        response.text = ""
 ```
 
-## Project Structure
+## Using with Production Servers
 
-```
-project/
-├── code_hacker/          # Framework package
-│   ├── __init__.py
-│   ├── api.py           # Application class
-│   ├── middleware.py    # Middleware base class
-│   └── response.py      # Response class
-├── app.py               # Your application routes
-├── conftest.py          # Test fixtures
-├── test_code_hacker.py  # Test suite
-├── static/              # Static files
-│   └── main.css
-└── templates/           # Jinja2 templates
-    └── index.html
+### Gunicorn
+
+```bash
+gunicorn app:app
 ```
 
-## API Reference
+### uWSGI
 
-### Application Class
+```bash
+uwsgi --http :8000 --wsgi-file app.py
+```
 
-#### Methods
+### Waitress
 
-- `route(path, allowed_methods=None)`: Decorator to register a route
-- `add_route(path, handler, allowed_methods=None)`: Explicitly register a route
-- `add_middleware(middleware_cls)`: Register middleware
-- `add_exception_handler(handler)`: Register exception handler
-- `template(template_name, context=None)`: Render a Jinja2 template
-- `test_session(base_url="http://testserver")`: Create a test client
+```python
+from waitress import serve
+serve(app, host='0.0.0.0', port=8000)
+```
 
-#### Constructor Parameters
+## Response Format Reference
 
-- `templates_dir="templates"`: Directory containing Jinja2 templates
-- `static_dir="static"`: Directory containing static files
+### Required Response Format
 
-### Response Object
+**You must use one of these properties to send a response:**
 
-#### Properties
+```python
+# Option 1: JSON Response
+response.json = {"key": "value"}
+# → Content-Type: application/json
 
-- `text`: Set plain text response (sets content-type to text/plain)
-- `json`: Set JSON response (sets content-type to application/json)
-- `html`: Set HTML response (sets content-type to text/html)
-- `body`: Set raw body as bytes
-- `content_type`: Set content-type header
-- `status_code`: Set HTTP status code (default: 200)
-- `headers`: Dictionary of custom headers
+# Option 2: HTML Response
+response.html = "<h1>Hello</h1>"
+# → Content-Type: text/html
 
-### Middleware Class
+# Option 3: Plain Text Response
+response.text = "Hello, World!"
+# → Content-Type: text/plain
+```
 
-Override these methods in your middleware:
+### Response Properties
 
-- `process_request(request)`: Called before request handling
-- `process_response(request, response)`: Called after request handling
+| Property       | Type      | Description                     | Auto Content-Type           |
+| -------------- | --------- | ------------------------------- | --------------------------- |
+| `json`         | dict/list | JSON response data              | `application/json`          |
+| `html`         | str       | HTML content                    | `text/html`                 |
+| `text`         | str       | Plain text content              | `text/plain`                |
+| `body`         | bytes     | Raw binary body                 | Manual (set `content_type`) |
+| `status_code`  | int       | HTTP status code (default: 200) | -                           |
+| `content_type` | str       | Custom content-type header      | -                           |
+| `headers`      | dict      | Custom headers dictionary       | -                           |
 
-## Requirements
+### Important Notes
 
-- Python 3.7+
-- webob
-- jinja2
-- whitenoise
-- parse
-- requests
-- wsgiadapter
+1. **Always set exactly one response property** (`json`, `html`, or `text`) for clarity
+2. **Status code defaults to 200** if not specified
+3. **Content-Type is automatically set** based on the response property used
+4. **Priority order**: `text` > `html` > `json` (if multiple are set)
+5. **Custom headers** can be added via `response.headers["Header-Name"] = "value"`
 
 ## License
 
