@@ -25,3 +25,13 @@ def test_create_tables(db, Author, Book):
 
     for table in ("author", "book"):
         assert table in db.tables
+
+
+def test_create_author_instance(db, Author):
+    db.create(Author)
+
+    nabil = Author(name="Ahnaf Nabil", age=24)
+
+    assert nabil.name == "Ahnaf Nabil"
+    assert nabil.age == 24
+    assert nabil.id is None

@@ -15,6 +15,14 @@ class Database:
 
 
 class Table:
+    def __init__(self,**kwargs):
+        self._data={
+            "id":None
+        }
+
+        for key, value in kwargs.items():
+            self._data[key]=value
+        
     @classmethod
     def _get_create_sql(cls):
         CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS {name} ({fields});"
